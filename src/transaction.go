@@ -12,7 +12,7 @@ import (
 type Tx struct {
 	version     []byte
 	flag        []byte
-	nbIn, nbOut []byte
+	nbIn, nbOut int
 	inputs      []TxIn
 	outputs     []TxOut
 	lock_time   time.Time
@@ -39,37 +39,32 @@ func InitializeTransaction() (tx Tx) {
 
 	in := make([]byte, 8)
 	i := int64(0)
-	binary.LittleEndian.PutUint64(in, uint64(i))
+	binary.BigEndian.PutUint64(in, uint64(i))
 
 	out := make([]byte, 8)
 	i = int64(0)
-	binary.LittleEndian.PutUint64(out, uint64(i))
+	binary.BigEndian.PutUint64(out, uint64(i))
 
 	new_tx := Tx{
 		version:   []byte{0, 0, 0, 1},
 		flag:      []byte{0, 1},
 		lock_time: now,
-		nbIn:      in,
-		nbOut:     out,
+		nbIn:      0,
+		nbOut:     0,
 	}
 
 	return new_tx
 }
 
-func AddOutput(tx *Tx, out *TxOut) {
+func (tx *Tx) AddOutput(out *TxOut) {
 	tx.outputs = append(tx.outputs, *out)
-
-	temp := int64(binary.LittleEndian.Uint64(tx.nbOut))
-	temp += 1
-	binary.LittleEndian.PutUint64(tx.nbOut, uint64(temp))
+	tx.nbOut += 1
 }
 
-func AddInput(tx *Tx, input *TxIn) {
+func (tx *Tx) AddInput(input *TxIn) {
 	tx.inputs = append(tx.inputs, *input)
 
-	temp := int64(binary.LittleEndian.Uint64(tx.nbIn))
-	temp += 1
-	binary.LittleEndian.PutUint64(tx.nbIn, uint64(temp))
+	tx.nbIn += 1
 }
 
 func Transaction(destAddress, txHash string, amount int64, out *TxOut) (Tx, error) {
@@ -98,21 +93,21 @@ func Transaction(destAddress, txHash string, amount int64, out *TxOut) (Tx, erro
 		ScriptPubKey:   []byte(destAddress),
 	}
 
-	AddInput(&tx, &txInput)
-	AddOutput(&tx, &txOutput)
+	tx.AddInput(&txInput)
+	tx.AddOutput(&txOutput)
 	return tx, nil
 }
 
-func SerializeTransaction(tx *Tx) ([]byte, error) {
+func (tx *Tx) Serialize() ([]byte, error) {
 	res := []byte{}
 
 	res = append(res, tx.version...)
 	res = append(res, tx.flag...)
 
-	if len(tx.nbIn) > 9 {
-		return nil, fmt.Errorf("error in nb_count")
-	}
-	res = append(res, tx.nbIn...)
+	in := make([]byte, 8)
+	binary.LittleEndian.PutUint64(in, uint64(tx.nbIn))
+
+	res = append(res, in...)
 
 	for _, elt := range tx.inputs {
 
@@ -139,10 +134,10 @@ func SerializeTransaction(tx *Tx) ([]byte, error) {
 		res = append(res, elt.sequence...)
 	}
 
-	if len(tx.nbOut) > 9 {
-		return nil, fmt.Errorf("error in nb_count")
-	}
-	res = append(res, tx.nbOut...)
+	out := make([]byte, 8)
+	binary.LittleEndian.PutUint64(out, uint64(tx.nbOut))
+
+	res = append(res, out...)
 
 	for _, elt := range tx.outputs {
 		if len(elt.Value) != 8 {

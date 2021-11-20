@@ -24,7 +24,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Error")
 	}
-	res, _ := src.SerializeTransaction(&transaction)
+	res, _ := transaction.Serialize()
 
 	final := hex.EncodeToString(res)
 
