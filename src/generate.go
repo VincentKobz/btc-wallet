@@ -2,7 +2,6 @@ package src
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/decred/dcrd/dcrec/secp256k1"
@@ -10,10 +9,10 @@ import (
 )
 
 // GenerateBtcAddress: Generate new BTC address
-func GenerateBtcAddress() (string, string) {
+func GenerateBtcAddress() (string, *secp256k1.PrivateKey, error) {
 	privateKey, err := secp256k1.GeneratePrivateKey()
 	if err != nil {
-		return "", ""
+		return "", nil, err
 	}
 
 	publicKey := privateKey.PubKey()
@@ -34,5 +33,5 @@ func GenerateBtcAddress() (string, string) {
 
 	btcAddress := base58.Encode(temp)
 
-	return btcAddress, hex.EncodeToString(privateKey.Serialize())
+	return btcAddress, privateKey, nil
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	btcAddress, privateKey := src.GenerateBtcAddress()
+	btcAddress, privateKey, _ := src.GenerateBtcAddress()
 	fmt.Println(btcAddress)
 	fmt.Println(privateKey)
 
@@ -20,11 +20,14 @@ func main() {
 
 	test.Value = temp
 
-	transaction, err := src.Transaction("13iFeyezF7SHcHhpYsosTQpqWcxbL5aSCL", "4e8378675bcf6a389c8cfe246094aafa44249e48ab88a40e6fda3bf0f44f916a", 1, &test)
+	transaction, err := src.Transaction(btcAddress, "13iFeyezF7SHcHhpYsosTQpqWcxbL5aSCL", "4e8378675bcf6a389c8cfe246094aafa44249e48ab88a40e6fda3bf0f44f916a", 1, &test)
 	if err != nil {
 		fmt.Println("Error")
 	}
-	res, _ := transaction.Serialize()
+	res, err := transaction.SerializeSignature(privateKey)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	final := hex.EncodeToString(res)
 
