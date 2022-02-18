@@ -25,11 +25,13 @@ func main() {
 		fmt.Println("Error")
 	}
 	res, err := transaction.SerializeSignature(privateKey)
+
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	final := hex.EncodeToString(res)
 
+	fmt.Println("transaction")
 	fmt.Println(final)
 }
