@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcutil"
 	"github.com/decred/dcrd/dcrec/secp256k1/v2"
 )
 
@@ -186,6 +188,8 @@ func (tx *Tx) SerializeSignature(privateKey *secp256k1.PrivateKey) ([]byte, erro
 			return nil, err
 		}
 		res = append(res, VarIntConverter(len(txInScript))...)
+		fmt.Print("scriptSig: ")
+		fmt.Println(txInScript)
 		res = append(res, txInScript...)
 		res = append(res, elt.sequence...)
 	}
@@ -204,9 +208,22 @@ func (tx *Tx) SerializeSignature(privateKey *secp256k1.PrivateKey) ([]byte, erro
 		if len(elt.TxOutScriptLen) > 9 {
 			return nil, fmt.Errorf("error in scriptlen")
 		}
+		address, err := btcutil.DecodeAddress(string(elt.ScriptPubKey), &chaincfg.MainNetParams)
 
-		res = append(res, elt.TxOutScriptLen...)
-		res = append(res, elt.ScriptPubKey...)
+		if err != nil {
+			return nil, err
+		}
+
+		script, err := txscript.PayToAddrScript(address)
+
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, VarIntConverter(len(script))...)
+		fmt.Print("test")
+		fmt.Println(script)
+		res = append(res, script...)
 	}
 	return res, nil
 }
